@@ -19,6 +19,8 @@ import java.util.HashSet;
  */
 public class JavaChatServer {
     
+    static int numClients = 0;
+    
        /**
      * The port that the server listens on.
      */
@@ -47,6 +49,8 @@ public class JavaChatServer {
         // TODO code application logic here
       //   ServerSocket listener=;
          
+      
+      
        System.out.println("The chat server is running.");
         try {
            ServerSocket listener = new ServerSocket(PORT);
@@ -54,6 +58,7 @@ public class JavaChatServer {
     
             while (true) {
                 new Handler( listener.accept()).start();
+                numClients++;
             } 
             
             // listener.close();
@@ -114,13 +119,18 @@ public class JavaChatServer {
                 // Now that a successful name has been chosen, add the
                 // socket's print writer to the set of all writers so
                 // this client can receive broadcast messages.
-                out.println("NAMEACCEPTED");
+                
+                //out.println("NAMEACCEPTED "+numClients+" ");
+                out.println("NAMEACCEPTED "+(writers.size()+1)+" ");
                 
                 // Send Message to clients to force sync
                  for (PrintWriter writer : writers) {
-                            writer.println("SYNC: "+name);
-                        }
                 
+                            System.out.println("Sync writers "+(writers.size()+1));
+                            writer.println("SYNC: "+name);
+                            writer.flush();
+                       //     break;
+                        }
                 
                 writers.add(out);
 
@@ -131,7 +141,12 @@ public class JavaChatServer {
                     if (input == null) {
                         return;
                     }
-                    if ( input.startsWith("+"))
+                    if ( input.startsWith("$"))
+                    {
+                        for (PrintWriter writer : writers) {
+                            writer.println("TYPE: " + input);
+                        }
+                    } else if ( input.startsWith("+"))
                     {
                         for (PrintWriter writer : writers) {
                             writer.println("STUFF: " + input);
@@ -168,6 +183,7 @@ public class JavaChatServer {
                 if (out != null) {
                     writers.remove(out);
                 }
+                numClients--;
                 try {
                     socket.close();
                 } catch (IOException e) {
