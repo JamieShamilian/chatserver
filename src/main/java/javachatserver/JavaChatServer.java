@@ -52,6 +52,8 @@ public class JavaChatServer {
       
       
        System.out.println("The chat server is running.");
+
+       // create a listen socket and loop forever accepting new clients
         try {
            ServerSocket listener = new ServerSocket(PORT);
 
@@ -108,6 +110,7 @@ public class JavaChatServer {
                     if (name == null) {
                         return;
                     }
+		    // make sure onlyone thread acts at a time to the names hash set
                     synchronized (names) {
                         if (!names.contains(name)) {
                             names.add(name);
@@ -121,16 +124,19 @@ public class JavaChatServer {
                 // this client can receive broadcast messages.
                 
                 //out.println("NAMEACCEPTED "+numClients+" ");
-                out.println("NAMEACCEPTED "+(writers.size()+1)+" ");
+
+		// send nameaccepted to the client and number of client
+		// ( 1 indicates first client and forces client to choose dinnerType)
+		out.println("NAMEACCEPTED "+(writers.size()+1)+" ");
                 
-                // Send Message to clients to force sync
-                 for (PrintWriter writer : writers) {
+                // Send SYNC Message to clients to force sync
+		for (PrintWriter writer : writers) {
                 
-                            System.out.println("Sync writers "+(writers.size()+1));
-                            writer.println("SYNC: "+name);
-                            writer.flush();
-                       //     break;
-                        }
+		    System.out.println("Sync writers "+(writers.size()+1));
+		    writer.println("SYNC: "+name);
+		    writer.flush();
+		    //     break;
+		}
                 
                 writers.add(out);
 
@@ -141,19 +147,23 @@ public class JavaChatServer {
                     if (input == null) {
                         return;
                     }
+
                     if ( input.startsWith("$"))
                     {
+			// dinnertype
                         for (PrintWriter writer : writers) {
                             writer.println("TYPE: " + input);
                         }
                     } else if ( input.startsWith("+"))
                     {
+			// button set
                         for (PrintWriter writer : writers) {
                             writer.println("STUFF: " + input);
                         }
                     } else 
                     if ( input.startsWith("-"))
                     {
+			// button reset
                         for (PrintWriter writer : writers) {
                             writer.println("STUFF: " + input);
                         }
@@ -161,13 +171,15 @@ public class JavaChatServer {
                     else
                      if ( input.startsWith("^"))
                     {
+			// size set/rest
                         for (PrintWriter writer : writers) {
                             writer.println("SIZE: " + input);
                         }
                     }                    
                     else
                    {
-                        for (PrintWriter writer : writers) {
+		       // chat message 
+		       for (PrintWriter writer : writers) {
                             writer.println("MESSAGE " + name + ": " + input);
                         }
                     }
